@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/C-Swain/tinyapp/issues"
   },
-  "homepage": "https://github.com/C-Swain/tinyapp#readme"
+  "homepage": "https://github.com/C-Swain/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
