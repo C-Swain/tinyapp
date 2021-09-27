@@ -12,7 +12,7 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-	res.send("Hello!");
+	res.send("Welcome to a most superb website!");
 
 });
 
