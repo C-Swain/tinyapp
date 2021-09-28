@@ -7,7 +7,7 @@ const generateRandomstring = require("./generateRandomString")
 const PORT = 8080; // 8080 is the defualt port 
 
 app.set("view engine", "ejs");
-
+app.use(bodyParser.urlencoded({extended: true}));
 const urlDatabase = {
 	"b2xVn2": "http://www.lighthouselabs.ca" ,
 	"9sm5xK": "http://www.google.com",
@@ -34,10 +34,10 @@ res.render("urls_new");
 
 });
 
-app.use(bodyParser.urlencoded({extended: true}));
+
 app.post("/urls", (req, res) => {
-	let longURL = req.body.longURL;
-  let shortURL = generateRandomstring();
+	const longURL = req.body.longURL;
+  const shortURL = generateRandomstring();
 	urlDatabase[shortURL] =  `${longURL}`
 res.redirect('/urls')        
 });
@@ -47,6 +47,24 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL]};
 		return res.render("urls_show", templateVars);
 });
+
+app.post('/urls/:shortURL', (req, res) => {
+	const shortURL = req.params.shortURL;
+  const longURL = req.body.longURL;
+	urlDatabase[shortURL].longURL = longURL;
+
+	res.redirect('/urls')
+
+})
+app.post('/urls/:shortURL/delete',(req, res) => {
+	
+	const shortURL = req.params.shortURL;
+	console.log("request from delete", shortURL);
+	delete urlDatabase[shortURL];
+  
+	res.redirect('/urls')
+
+})
 
 app.listen(PORT, () => {
 	console.log(`Example app listening on port ${PORT}!`);
