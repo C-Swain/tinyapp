@@ -9,7 +9,7 @@ const PORT = 8080; // 8080 is the defualt port
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 const urlDatabase = {
-	"b2xVn2": "http://www.lighthouselabs.ca" ,
+	"b2xVn2": "http://www.lighthouselabs.ca",
 	"9sm5xK": "http://www.google.com",
 };
 
@@ -28,19 +28,22 @@ app.get("/urls", (req, res) => {
 	res.render("urls_index", templateVars);
 });
 
-
+app.get("/u/:shortURL", (req, res) => {	
+	const shortURL = req.params.shortURL;
+	const longURL = urlDatabase[shortURL];
+	res.redirect(`${longURL}`);
+})
 app.get("/urls/new", (req, res) => {
 res.render("urls_new");
 
 });
 
-
 app.post("/urls", (req, res) => {
 	const longURL = req.body.longURL;
   const shortURL = generateRandomstring();
 	urlDatabase[shortURL] =  `${longURL}`
-res.redirect('/urls')        
-});
+res.redirect('/urls');       
+}); 
 
 app.get("/urls/:shortURL", (req, res) => {
 	const shortURL = req.params.shortURL;
@@ -49,20 +52,22 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post('/urls/:shortURL', (req, res) => {
+	console.log("console log for urls/:shortUrl!")
 	const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-	urlDatabase[shortURL].longURL = longURL;
+	console.log("shortURL", shortURL,"longURL", longURL);
+	urlDatabase[shortURL] = longURL;
 
-	res.redirect('/urls')
-
+	res.redirect('/urls');
 })
+
 app.post('/urls/:shortURL/delete',(req, res) => {
 	
 	const shortURL = req.params.shortURL;
-	console.log("request from delete", shortURL);
+
 	delete urlDatabase[shortURL];
   
-	res.redirect('/urls')
+	res.redirect('/urls');
 
 })
 
