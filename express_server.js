@@ -1,8 +1,9 @@
 
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
-const app = express();
 const express = require("express");
+const app = express();
+const generateRandomstring = require("./generateRandomString")
+
 const PORT = 8080; // 8080 is the defualt port 
 
 app.set("view engine", "ejs");
@@ -33,9 +34,12 @@ res.render("urls_new");
 
 });
 
+app.use(bodyParser.urlencoded({extended: true}));
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+	let longURL = req.body.longURL;
+  let shortURL = generateRandomstring();
+	urlDatabase[shortURL] =  `${longURL}`
+res.redirect('/urls')        
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -48,14 +52,3 @@ app.listen(PORT, () => {
 	console.log(`Example app listening on port ${PORT}!`);
 });
 
-function generateRandomString() {
-	let ID = "";
-	let possible = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
-
-	for (let i = 0; i < 6; i++)
-		ID += possible.charAt(Math.floor(Math.random() * possible.length));
-
-	return ID;
-}
-
-console.log(generateRandomString());
