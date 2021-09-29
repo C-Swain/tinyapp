@@ -8,11 +8,14 @@ const cookieParser = require('cookie-parser')
 const PORT = 8080; // 8080 is the defualt port 
 
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true}));
+app.use(cookieParser());
+
 const urlDatabase = {
 	"b2xVn2": "http://www.lighthouselabs.ca",
 	"9sm5xK": "http://www.google.com",
 };
+
 //user database
 const users = { 
   "userRandomID": {
@@ -56,53 +59,64 @@ const validateUser = (email, password) => {
 	}
 	return false;
 }
-
+//Home Page redirects
 app.get("/", (req, res) => {
 	res.send("Very cool website");
   res.redirect('urls');
 });
 
+// useless Hello Page
 app.get("/hello", (req, res) => {
  const templateVars = {greeting : "Hello World!"};
  res.render("hello_world", templateVars);
 });
 
+// Main URL
 app.get("/urls", (req, res) => {
-	const templateVars = { urls: urlDatabase};
+	const userID = req.cookies.user_id;
+	const templateVars = { urls: urlDatabase , user: userID};
 	res.render("urls_index", templateVars);
 });
 
+//hotlinks 
 app.get("/u/:shortURL", (req, res) => {	
 	const shortURL = req.params.shortURL;
 	const longURL = urlDatabase[shortURL];
 	res.redirect(`${longURL}`);
 }) 
 
+// this is the registration Page
 app.get('/register', (req, res) => {
 	const templateVars = {userName: null};
 	res.render("register",templateVars)
- })
-
-app.post('/register',(req, res) => {
-const email = req.body.email;
-const password = req.body.password;
-
-const user = findUserByEmail(email);
-
-if (!user) {
-const id = addNewUser(email, password);
-console.log(id);
-res.cookie('user_id', id);
-res.redirect('/urls');
-}else {
-	res.status(403).send('You are already registered please login');
-}
-});
-
-app.get("/urls/new", (req, res) => {
-res.render("urls_new");
 })
 
+ // This sends registration to database
+app.post('/register',(req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+	if( email === "" || password === "") {
+		return res.status(400).send('please fill out a valid email and password');
+	}
+
+  const user = findUserByEmail(email);
+  if (!user) {
+    const id = addNewUser(email, password);
+    console.log(id);
+    res.cookie('user_id', id);
+    res.redirect('/urls');
+    }else {
+	    res.status(404).send('You are already registered please login');
+  }
+});
+
+// this adds new URL
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+})
+
+//creates new URL
 app.post("/urls", (req, res) => {
 	const longURL = req.body.longURL;
   const shortURL = generateRandomstring();
@@ -110,24 +124,30 @@ app.post("/urls", (req, res) => {
 res.redirect('/urls');       
 }); 
 
+// this is a template for our short link page
 app.get("/urls/:shortURL", (req, res) => {
 	const shortURL = req.params.shortURL;
   const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL]};
 		return res.render("urls_show", templateVars);
 });
 
-  app.post("/login", (req, res) => {
-  const userName = req.body.userName;
+// the login incompete
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+	const password = req.body.password;
+
+	const user = validateUser(email, password)
 
 	res.redirect('/urls')
-	})
+})
 
-	app.post("/logout", (req, res) => {
-	res.clearCookie("userName")
+//this logs out the User ( working)
+app.post("/logout", (req, res) => {
+	res.clearCookie("user_id")
 	res.redirect('/urls')
-	})
+})
 	
-
+// this creates the new short URLS
 app.post('/urls/:shortURL', (req, res) => {
 	console.log("console log for urls/:shortUrl!")
 	const shortURL = req.params.shortURL;
@@ -138,12 +158,10 @@ app.post('/urls/:shortURL', (req, res) => {
 	res.redirect('/urls');
 })
 
+//this deletes objects from the short URL
 app.post('/urls/:shortURL/delete',(req, res) => {
-	
 	const shortURL = req.params.shortURL;
-
 	delete urlDatabase[shortURL];
-  
 	res.redirect('/urls');
 
 })
