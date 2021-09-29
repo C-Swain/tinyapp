@@ -74,7 +74,8 @@ app.get("/hello", (req, res) => {
 // Main URL
 app.get("/urls", (req, res) => {
 	const userID = req.cookies.user_id;
-	const templateVars = { urls: urlDatabase , user: userID};
+	const loggedinUser = users[userID];
+	const templateVars = { urls: urlDatabase , user: loggedinUser};
 	res.render("urls_index", templateVars);
 });
 
@@ -87,7 +88,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // this is the registration Page
 app.get('/register', (req, res) => {
-	const templateVars = {userName: null};
+  const templateVars = {user: null};
 	res.render("register",templateVars)
 })
 
@@ -113,7 +114,10 @@ app.post('/register',(req, res) => {
 
 // this adds new URL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+	const userID = req.cookies.user_id;
+	const loggedinUser = users[userID];
+	const templateVars = {user: loggedinUser};
+  res.render("urls_new",templateVars);
 })
 
 //creates new URL
@@ -127,7 +131,9 @@ res.redirect('/urls');
 // this is a template for our short link page
 app.get("/urls/:shortURL", (req, res) => {
 	const shortURL = req.params.shortURL;
-  const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL]};
+	const userID = req.cookies.user_id;
+	const loggedinUser = users[userID];
+  const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL], user: loggedinUser};
 		return res.render("urls_show", templateVars);
 });
 
