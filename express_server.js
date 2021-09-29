@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 const generateRandomstring = require("./generateRandomString")
+const cookieParser = require('cookie-parser')
 
 const PORT = 8080; // 8080 is the defualt port 
 
@@ -32,11 +33,11 @@ app.get("/u/:shortURL", (req, res) => {
 	const shortURL = req.params.shortURL;
 	const longURL = urlDatabase[shortURL];
 	res.redirect(`${longURL}`);
-})
+}) 
+
 app.get("/urls/new", (req, res) => {
 res.render("urls_new");
-
-});
+})
 
 app.post("/urls", (req, res) => {
 	const longURL = req.body.longURL;
@@ -51,11 +52,24 @@ app.get("/urls/:shortURL", (req, res) => {
 		return res.render("urls_show", templateVars);
 });
 
+  app.post("/login", (req, res) => {
+  const userName = req.body.userName;
+	console.log(userName);
+	res.cookie("userName", userName)
+	res.redirect('/urls')
+	})
+
+	app.post("/logout", (req, res) => {
+	res.clearCookie("userName")
+	res.redirect('/urls')
+	})
+	
+
 app.post('/urls/:shortURL', (req, res) => {
 	console.log("console log for urls/:shortUrl!")
 	const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-	console.log("shortURL", shortURL,"longURL", longURL);
+
 	urlDatabase[shortURL] = longURL;
 
 	res.redirect('/urls');
