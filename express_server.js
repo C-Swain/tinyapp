@@ -148,9 +148,13 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
 	const password = req.body.password;
 
+  if( email === "" || password === "") {
+		return res.status(400).send('please fill out a valid email and password');
+	}
+
 	const user = validateUser(email, password);
 
-if (user) {
+  if (user) {
 	//if the user passes validation we set the cookie
 	
 	res.cookie('user_id', user);
@@ -158,7 +162,7 @@ if (user) {
 	res.redirect('/urls')
 	return
 }
-  res.status(401).send("Wrong Credentials, Please try Again")	
+  res.status(403).send("Wrong Credentials, Please try Again")	
 })
 
 //this logs out the User ( working)
