@@ -4,7 +4,7 @@ const express = require("express");
 const app = express();
 const generateRandomstring = require("./generateRandomString")
 const cookieParser = require('cookie-parser')
-
+const bcrypt = require('bcryptjs');
 const PORT = 8080; // 8080 is the defualt port 
 
 app.set("view engine", "ejs");
@@ -22,6 +22,8 @@ const urlDatabase = {
 	}
 
 };
+//for hashing the passwords 
+//const hashedPassword = bcrypt.hashSync(password, 10);
 
 //user database
 const users = { 
@@ -77,7 +79,6 @@ const validateShortUrl = (shortURL) => {
 	}
 	return false;
 }
-
 
 
 //Home Page redirects, if logged in it goes to URLS if not it takes you to the log in page
@@ -153,6 +154,7 @@ app.post("/register",(req, res) => {
 app.get("/urls/new", (req, res) => {
 	const userID = req.cookies.user_id;
 	const loggedinUser = users[userID];
+
 	const templateVars = {user: loggedinUser};
   res.render("urls_new",templateVars);
 })
@@ -167,7 +169,7 @@ app.post("/urls", (req, res) => {
 	urlDatabase[shortURL]= {longURL: longURL, userID: userID}
 res.redirect('/urls');
 	} else {
-		res.status(403).send(" You must be logged in to create a new URL")	
+	res.status(403).send(" You must be logged in to create a new URL")	
 	}       
 }); 
 
@@ -214,18 +216,20 @@ app.post("/login", (req, res) => {
   res.status(403).send("Wrong Credentials, Please try Again")	
 })
 
-//this logs out the User ( working)
+//this logs out the User
 app.post("/logout", (req, res) => {
 	res.clearCookie("user_id")
 	res.redirect('/urls')
 })
 	
-// this creates the new short URLS
+// this updates the new short URLS
 app.post("/urls/:shortURL", (req, res) => {
 	console.log("console log for urls/:shortUrl!")
-	const userID = req.cookies.user_id;
+	const user = req.cookies.user_id;
 	const shortURL = req.params.shortURL;
   const longURL = req.body.longURL
+	if (user !== urlDatabase[shortURL].userID) {
+		res.send(" Only the Owner can edit the ShortURL")}
 	urlDatabase[shortURL] = {longURL: longURL, userID: userID}
 	res.redirect('/urls');
 })
@@ -233,9 +237,11 @@ app.post("/urls/:shortURL", (req, res) => {
 //this deletes objects from the short URL
 app.post('/urls/:shortURL/delete',(req, res) => {
 	const shortURL = req.params.shortURL;
+	const user = req.cookies.user_id;
+	if (user !== urlDatabase[shortURL].userID) {
+	res.send(" Only the Owner can delete the ShortURL")}
 	delete urlDatabase[shortURL];
 	res.redirect('/urls');
-
 })
 
 app.listen(PORT, () => {
