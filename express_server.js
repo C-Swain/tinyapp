@@ -223,9 +223,10 @@ app.post("/logout", (req, res) => {
 // this creates the new short URLS
 app.post("/urls/:shortURL", (req, res) => {
 	console.log("console log for urls/:shortUrl!")
+	const userID = req.cookies.user_id;
 	const shortURL = req.params.shortURL;
   const longURL = req.body.longURL
-	urlDatabase[shortURL].longURL = longURL;
+	urlDatabase[shortURL] = {longURL: longURL, userID: userID}
 	res.redirect('/urls');
 })
 
