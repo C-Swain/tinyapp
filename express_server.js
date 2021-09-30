@@ -59,13 +59,18 @@ const validateUser = (email, password) => {
 	}
 	return false;
 }
-//Home Page redirects
+//Home Page redirects, if logged in it goes to URLS if not it takes you to the log in page
 app.get("/", (req, res) => {
-	res.send("Very cool website");
-  res.redirect('urls');
+	const userID = req.cookies.user_id;
+	const loggedinUser = users[userID];
+	if (loggedinUser) {
+	res.redirect("/urls");
+	} else {
+  res.redirect("/login");
+	}
 });
 
-// useless Hello Page
+// useless Hello Page 
 app.get("/hello", (req, res) => {
  const templateVars = {greeting : "Hello World!"};
  res.render("hello_world", templateVars);
@@ -86,19 +91,26 @@ app.get("/u/:shortURL", (req, res) => {
 	res.redirect(`${longURL}`);
 }) 
 
-// this is the registration Page
+// this is the registration Page, 
 app.get('/register', (req, res) => {
+	// here we check the cookies if you are logged in you are sent to URLS
+	const userID = req.cookies.user_id;
+	const loggedinUser = users[userID];
+	if (loggedinUser) {
+	res.redirect("/urls");
+	} else {
   const templateVars = {user: null};
-	res.render("register",templateVars)
+	res.render("register",templateVars);
+}
 })
 
  // This sends registration to database
-app.post('/register',(req, res) => {
+app.post("/register",(req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
 	if( email === "" || password === "") {
-		return res.status(400).send('please fill out a valid email and password');
+		return res.status(400).send("please fill out a valid email and password");
 	}
 
   const user = findUserByEmail(email);
@@ -107,12 +119,12 @@ app.post('/register',(req, res) => {
     console.log(id);
     res.cookie('user_id', id);
     res.redirect('/urls');
-    }else {
-	    res.status(404).send('You are already registered please login');
-  }
-});
+    } else {
+	    res.status(404).send("You are already registered please login");
+  };
+})
 
-// this adds new URL
+// this renders the form to make a new URL, 
 app.get("/urls/new", (req, res) => {
 	const userID = req.cookies.user_id;
 	const loggedinUser = users[userID];
@@ -122,10 +134,16 @@ app.get("/urls/new", (req, res) => {
 
 //creates new URL
 app.post("/urls", (req, res) => {
+	const userID = req.cookies.user_id;
+	const loggedinUser = users[userID];
 	const longURL = req.body.longURL;
   const shortURL = generateRandomstring();
+	if (loggedinUser) {
 	urlDatabase[shortURL] =  `${longURL}`
-res.redirect('/urls');       
+res.redirect('/urls');
+	} else {
+		res.status(403).send(" You must be logged in to create a new URL")	
+	}       
 }); 
 
 // this is a template for our short link page
@@ -138,7 +156,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 //This loads the login page
-app.get('/login', (req, res) => {
+app.get("/login", (req, res) => {
   const templateVars = {user: null};
 	res.render("login",templateVars)
 })
@@ -149,7 +167,7 @@ app.post("/login", (req, res) => {
 	const password = req.body.password;
 
   if( email === "" || password === "") {
-		return res.status(400).send('please fill out a valid email and password');
+		return res.status(400).send("please fill out a valid email and password");
 	}
 
 	const user = validateUser(email, password);
@@ -157,9 +175,9 @@ app.post("/login", (req, res) => {
   if (user) {
 	//if the user passes validation we set the cookie
 	
-	res.cookie('user_id', user);
+	res.cookie("user_id", user);
 	console.log(user);
-	res.redirect('/urls')
+	res.redirect("/urls")
 	return
 }
   res.status(403).send("Wrong Credentials, Please try Again")	
@@ -172,7 +190,7 @@ app.post("/logout", (req, res) => {
 })
 	
 // this creates the new short URLS
-app.post('/urls/:shortURL', (req, res) => {
+app.post("/urls/:shortURL", (req, res) => {
 	console.log("console log for urls/:shortUrl!")
 	const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
