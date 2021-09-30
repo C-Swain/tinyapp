@@ -12,14 +12,21 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
 const urlDatabase = {
-	"b2xVn2": "http://www.lighthouselabs.ca",
-	"9sm5xK": "http://www.google.com",
+	b6UTxQ: {
+			longURL: "https://www.tsn.ca",
+			userID: "aJ48lW"
+	},
+	i3BoGr: {
+			longURL: "https://www.google.ca",
+			userID: "aJ48lW"
+	}
+
 };
 
 //user database
 const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
+  "aJ48lW": {
+    id: "aJ48lW", 
     email: "buttons@cat.com", 
     password: "meow"
   },
@@ -42,6 +49,7 @@ const addNewUser = (email, password) => {
 	return id;
 }
 
+// helper function to get the ID by cross referencing the email 
 const findUserByEmail = (email) => {
 	for (let id in users) {
 		if (users[id].email === email) {
@@ -59,6 +67,19 @@ const validateUser = (email, password) => {
 	}
 	return false;
 }
+
+const validateShortUrl = (shortURL) => {
+	for (let i in urlDatabase) {
+		if( i === shortURL) {
+	return true;
+		} 
+		
+	}
+	return false;
+}
+
+
+
 //Home Page redirects, if logged in it goes to URLS if not it takes you to the log in page
 app.get("/", (req, res) => {
 	const userID = req.cookies.user_id;
@@ -87,8 +108,12 @@ app.get("/urls", (req, res) => {
 //hotlinks 
 app.get("/u/:shortURL", (req, res) => {	
 	const shortURL = req.params.shortURL;
-	const longURL = urlDatabase[shortURL];
-	res.redirect(`${longURL}`);
+	if(validateShortUrl(shortURL)) {
+	const longURL = urlDatabase[shortURL].longURL;
+  res.redirect(`${longURL}`);
+	} else {
+	res.status(400).send("The Short URL you have entered is not associated with any Tinyapp link");
+	}
 }) 
 
 // this is the registration Page, 
@@ -139,7 +164,7 @@ app.post("/urls", (req, res) => {
 	const longURL = req.body.longURL;
   const shortURL = generateRandomstring();
 	if (loggedinUser) {
-	urlDatabase[shortURL] =  `${longURL}`
+	urlDatabase[shortURL]= {longURL: longURL, userID: userID}
 res.redirect('/urls');
 	} else {
 		res.status(403).send(" You must be logged in to create a new URL")	
@@ -149,10 +174,16 @@ res.redirect('/urls');
 // this is a template for our short link page
 app.get("/urls/:shortURL", (req, res) => {
 	const shortURL = req.params.shortURL;
+	if(validateShortUrl(shortURL)) {
+	const longURL = urlDatabase[shortURL].longURL;
 	const userID = req.cookies.user_id;
 	const loggedinUser = users[userID];
-  const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL], user: loggedinUser};
+  const templateVars = { shortURL: shortURL, longURL: longURL, user: loggedinUser};
 		return res.render("urls_show", templateVars);
+	} else {
+		res.status(400).send("The Short URL you have entered is not associated with any Tinyapp link")
+	}
+
 });
 
 //This loads the login page
@@ -193,10 +224,8 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
 	console.log("console log for urls/:shortUrl!")
 	const shortURL = req.params.shortURL;
-  const longURL = req.body.longURL;
-
-	urlDatabase[shortURL] = longURL;
-
+  const longURL = req.body.longURL
+	urlDatabase[shortURL].longURL = longURL;
 	res.redirect('/urls');
 })
 
