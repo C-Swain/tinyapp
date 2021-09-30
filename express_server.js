@@ -137,14 +137,28 @@ app.get("/urls/:shortURL", (req, res) => {
 		return res.render("urls_show", templateVars);
 });
 
-// the login incompete
+//This loads the login page
+app.get('/login', (req, res) => {
+  const templateVars = {user: null};
+	res.render("login",templateVars)
+})
+
+// the login function at work!
 app.post("/login", (req, res) => {
   const email = req.body.email;
 	const password = req.body.password;
 
-	const user = validateUser(email, password)
+	const user = validateUser(email, password);
 
+if (user) {
+	//if the user passes validation we set the cookie
+	
+	res.cookie('user_id', user);
+	console.log(user);
 	res.redirect('/urls')
+	return
+}
+  res.status(401).send("Wrong Credentials, Please try Again")	
 })
 
 //this logs out the User ( working)
