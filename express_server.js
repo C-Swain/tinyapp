@@ -4,27 +4,31 @@ const express = require("express");
 const app = express();
 const generateRandomstring = require("./generateRandomString")
 const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session')
 const bcrypt = require('bcryptjs');
 const PORT = 8080; // 8080 is the defualt port 
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['I like secret keys!', '159243adfsafds 45481d'],
+}))	
 
 // the URL database 
 const urlDatabase = {
 	b6UTxQ: {
 			longURL: "https://www.tsn.ca",
-			userID: "aJ48lW"
+			userID: "user2RandomID"
 	},
 	i3BoGr: {
 			longURL: "https://www.google.ca",
-			userID: "aJ48lW"
+			userID:  "user2RandomID"
 	}
 
 };
-//for hashing the passwords 
-//const hashedPassword = bcrypt.hashSync(password, 10);
+
 
 //user database
 const users = { 
@@ -96,8 +100,8 @@ const validateUser = (dB, email, password) => {
 const validateShortUrl = (shortURL) => {
 	for (let i in urlDatabase) {
 		if( i === shortURL) {
-	return true;
-		}
+	  return true;
+    }
 	}
 	return false;
 }
@@ -106,7 +110,7 @@ const validateShortUrl = (shortURL) => {
 
 //Home Page redirects, if logged in it goes to URLS if not it takes you to the log in page
 app.get("/", (req, res) => {
-	const userID = req.cookies.user_id;
+	const userID = req.session.id;
 	const loggedinUser = users[userID];
 	if (loggedinUser) {
 	return res.redirect("/urls");
@@ -124,7 +128,7 @@ app.get("/hello", (req, res) => {
 
 // Main URL
 app.get("/urls", (req, res) => {
-	const userID = req.cookies.user_id;
+	const userID = req.session.id;
 	const loggedinUser = users[userID];
 	if(!loggedinUser) {
 		return res.status(401).json(" You must but logged in to view this site ") 
@@ -148,7 +152,7 @@ app.get("/u/:shortURL", (req, res) => {
 // this is the registration Page, 
 app.get('/register', (req, res) => {
 	// here we check the cookies if you are logged in you are sent to URLS
-	const userID = req.cookies.user_id;
+	const userID = req.session.id;
 	const loggedinUser = users[userID];
 	if (loggedinUser) {
 	res.redirect("/urls");
@@ -172,26 +176,27 @@ app.post("/register",(req, res) => {
 		const hashedPass = bcrypt.hashSync(password, 10);
     const id = addNewUser(email, hashedPass);
     console.log(id);
-    res.cookie('user_id', id);
+    req.session.id = id;
     res.redirect('/urls');
     } else {
 	    res.status(404).send("You are already registered please login");
-  };
-})
+			
+	}
+
+});
 
 // this renders the form to make a new URL, 
 app.get("/urls/new", (req, res) => {
-	const userID = req.cookies.user_id;
+	const userID = req.session.id;
 	const loggedinUser = users[userID];
-
 	const templateVars = {user: loggedinUser};
   res.render("urls_new",templateVars);
 })
 
 //creates new URL
 app.post("/urls", (req, res) => {
-	const userID = req.cookies.user_id;
-	const loggedinUser = users[userID];
+	const userID = req.session.id;
+	const loggedinUser = users[userID]
 	const longURL = req.body.longURL;
   const shortURL = generateRandomstring();
 	if (loggedinUser) {
@@ -207,7 +212,7 @@ app.get("/urls/:shortURL", (req, res) => {
 	const shortURL = req.params.shortURL;
 	if(validateShortUrl(shortURL)) {
 	const longURL = urlDatabase[shortURL].longURL;
-	const userID = req.cookies.user_id;
+	const userID = req.session.id;
 	const loggedinUser = users[userID];
   const templateVars = { shortURL: shortURL, longURL: longURL, user: loggedinUser};
 		return res.render("urls_show", templateVars);
@@ -235,9 +240,9 @@ app.post("/login", (req, res) => {
 	const user = validateUser(dB, email, password);
 
   if (user) {
-	//if the user passes validation we set the cookie
+	//if the user passes validation we set the session
 	const userID = user.user.id
-	  res.cookie("user_id", userID);
+	  req.session.id = userID;
     res.redirect("/urls")
 		return
   }
@@ -247,14 +252,14 @@ app.post("/login", (req, res) => {
 
 //this logs out the User
 app.post("/logout", (req, res) => {
-	res.clearCookie("user_id")
-	res.redirect('/urls')
+	req.session = null;
+	res.redirect('/login')
 })
 	
 // this updates the new short URLS
 app.post("/urls/:shortURL", (req, res) => {
 	console.log("console log for urls/:shortUrl!")
-	const userID = req.cookies.user_id;
+	const userID = req.session.id;
 	const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
 	if (userID !== urlDatabase[shortURL].userID) {
@@ -266,7 +271,7 @@ app.post("/urls/:shortURL", (req, res) => {
 //this deletes objects from the short URL
 app.post('/urls/:shortURL/delete',(req, res) => {
 	const shortURL = req.params.shortURL;
-	const user = req.cookies.user_id;
+	const user = req.session.id;
 	if (user !== urlDatabase[shortURL].userID) {
 	  res.send(" Only the Owner can delete the ShortURL")
   }
