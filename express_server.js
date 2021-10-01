@@ -11,6 +11,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
+// the URL database 
 const urlDatabase = {
 	b6UTxQ: {
 			longURL: "https://www.tsn.ca",
@@ -35,9 +36,11 @@ const users = {
  "user2RandomID": {
     id: "user2RandomID", 
     email: "Busty@blackcat.com", 
-    password: "chusty"
+    password: "$2a$10$V55qSK3G8b1P8VunKCTomeYDMTv7igPO86SfmXzxrFnlwwaTar0Cu",
+
   }
 }
+
 //HELPER FUNCTIONS 
 const addNewUser = (email, password) => {
 	const id = generateRandomstring();
@@ -51,6 +54,17 @@ const addNewUser = (email, password) => {
 	return id;
 }
 
+// this function creates a object with all the URL belonging to the user
+const urlsForUser = function(id) {
+  const userURLs = {};
+  for (const urlKey in urlDatabase) {
+    if ( id === urlDatabase[urlKey].userID) {
+      userURLs[urlKey] = urlDatabase[urlKey];
+    }
+  }
+  return userURLs;
+}
+
 // helper function to get the ID by cross referencing the email 
 const findUserByEmail = (email) => {
 	for (let id in users) {
@@ -61,24 +75,33 @@ const findUserByEmail = (email) => {
 	return false;
 }
 
-const validateUser = (email, password) => {
-	const user = findUserByEmail(email);
-
-	if(user && user.password === password) {
-		return user.id;
+const validateUser = (dB, email, password) => {
+	const user = findUserByEmail(email) 
+	console.log(user);
+	if (user) {
+		
+		if (bcrypt.compareSync(password, user.password)) {
+			// Email & password match
+			return { user: user, error: null };
+		}
+		// Bad password
+		return { user: null, error: "bad password" };
 	}
-	return false;
-}
+	// Bad email
+	return { user: null, error: "bad email" };
+
+};
+
 
 const validateShortUrl = (shortURL) => {
 	for (let i in urlDatabase) {
 		if( i === shortURL) {
 	return true;
-		} 
-		
+		}
 	}
 	return false;
 }
+
 
 
 //Home Page redirects, if logged in it goes to URLS if not it takes you to the log in page
@@ -86,10 +109,11 @@ app.get("/", (req, res) => {
 	const userID = req.cookies.user_id;
 	const loggedinUser = users[userID];
 	if (loggedinUser) {
-	res.redirect("/urls");
-	} else {
+	return res.redirect("/urls");
+	
+} 
   res.redirect("/login");
-	}
+
 });
 
 // useless Hello Page 
@@ -102,7 +126,11 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
 	const userID = req.cookies.user_id;
 	const loggedinUser = users[userID];
-	const templateVars = { urls: urlDatabase , user: loggedinUser};
+	if(!loggedinUser) {
+		return res.status(401).json(" You must but logged in to view this site ") 
+		}
+	const	urls = urlsForUser(userID); ;
+	const templateVars = { urls: urls , user: loggedinUser};
 	res.render("urls_index", templateVars);
 });
 
@@ -141,7 +169,8 @@ app.post("/register",(req, res) => {
 
   const user = findUserByEmail(email);
   if (!user) {
-    const id = addNewUser(email, password);
+		const hashedPass = bcrypt.hashSync(password, 10);
+    const id = addNewUser(email, hashedPass);
     console.log(id);
     res.cookie('user_id', id);
     res.redirect('/urls');
@@ -198,23 +227,23 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
 	const password = req.body.password;
+	const dB = users;
 
   if( email === "" || password === "") {
 		return res.status(400).send("please fill out a valid email and password");
 	}
-
-	const user = validateUser(email, password);
+	const user = validateUser(dB, email, password);
 
   if (user) {
 	//if the user passes validation we set the cookie
-	
-	res.cookie("user_id", user);
-	console.log(user);
-	res.redirect("/urls")
-	return
-}
-  res.status(403).send("Wrong Credentials, Please try Again")	
-})
+	const userID = user.user.id
+	  res.cookie("user_id", userID);
+    res.redirect("/urls")
+		return
+  }
+    res.status(403).send("Wrong Credentials, Please try Again")	
+
+});
 
 //this logs out the User
 app.post("/logout", (req, res) => {
@@ -225,10 +254,10 @@ app.post("/logout", (req, res) => {
 // this updates the new short URLS
 app.post("/urls/:shortURL", (req, res) => {
 	console.log("console log for urls/:shortUrl!")
-	const user = req.cookies.user_id;
+	const userID = req.cookies.user_id;
 	const shortURL = req.params.shortURL;
-  const longURL = req.body.longURL
-	if (user !== urlDatabase[shortURL].userID) {
+  const longURL = req.body.longURL;
+	if (userID !== urlDatabase[shortURL].userID) {
 		res.send(" Only the Owner can edit the ShortURL")}
 	urlDatabase[shortURL] = {longURL: longURL, userID: userID}
 	res.redirect('/urls');
@@ -239,12 +268,12 @@ app.post('/urls/:shortURL/delete',(req, res) => {
 	const shortURL = req.params.shortURL;
 	const user = req.cookies.user_id;
 	if (user !== urlDatabase[shortURL].userID) {
-	res.send(" Only the Owner can delete the ShortURL")}
+	  res.send(" Only the Owner can delete the ShortURL")
+  }
 	delete urlDatabase[shortURL];
 	res.redirect('/urls');
-})
+});
 
 app.listen(PORT, () => {
 	console.log(`Example app listening on port ${PORT}!`);
 });
-
