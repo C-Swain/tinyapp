@@ -1,4 +1,4 @@
-
+//  This generater leaves out 0 & O  because they look too similar to make it easier to type in the codes, less errors!
 const bcrypt = require("bcryptjs");
 const generateRandomString = function() {
   let ID = "";
@@ -18,7 +18,6 @@ const addNewUser = (users,email,password) => {
 		password,
 	};
 	users[id] = newUser;
-	console.log(newUser);
 	return id;
 }
 
@@ -44,13 +43,12 @@ const getUserByEmail = (email, users) => {
 // this function creates a object with all the URL belonging to the u
 const urlsForUser = (urlDatabase, id) => {
   const userURLs = {};
-	console.log('urlDatabase', urlDatabase);
   for (const urlKey in urlDatabase) {
     if ( id === urlDatabase[urlKey].userID) {
       userURLs[urlKey] = urlDatabase[urlKey];
     }
   }
-	console.log(userURLs);
+	
 	
   return userURLs;
 }
@@ -62,7 +60,7 @@ const validateUser = (dB, email, password) => {
 		
 		if (bcrypt.compareSync(password, user.password)) {
 			// Email & password match
-			console.log("match");
+			
 			return { user: user, error: null };
 		}
 		// Bad password
