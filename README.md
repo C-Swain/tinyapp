@@ -6,8 +6,19 @@ TinyApp is a full stack web application built with Node and Express that allows 
 Here is a log in screen showing our simple log in process!
 ![Registration Page](https://github.com/C-Swain/tinyapp/blob/master/screenshots/register.png)
 
-One you are logged in you will be able to view any links in your library!
+
+![Registration Page](https://github.com/C-Swain/tinyapp/blob/master/screenshots/register.png)
+
+
+Here is a log in screen showing our simple log in process!
+
+
+
 ![User URL Page](https://github.com/C-Swain/tinyapp/blob/master/screenshots/urlsPageLoggedIn.png)
+
+
+One you are logged in you will be able to view any links in your library!
+
 
 ## Dependencies
 In order for Tinyapp correctly please make sure you have all the dependencies installed.
@@ -24,3 +35,5 @@ In order for Tinyapp correctly please make sure you have all the dependencies in
 - Run the development web server using the `node express_server.js` command.
 - at tiny app your password is encrypted with bcrypt for extra security. So don't forget your password.
 - if you run into any difficulties don't hesitate to contact me for more assistance.
+
+
