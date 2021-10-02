@@ -9,7 +9,7 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
      <% if (user) { %>
-			<li> Thank you for logging in <%= user.email %></li>
+			<a class="navbar-brand"href="/urls">Welcome <%= user.email %> </a>
 			<td><form method="POST" action="/logout"><button>Logout</button></form></td>
       <% } else { %>
 			<li><a class="nav-item nav-link" href="/register">Register</a>

@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser")
 const cookieSession = require("cookie-session")
 const bcrypt = require("bcryptjs");
 const PORT = 8080; // 8080 is the defualt port 
-const {addNewUser, generateRandomString, urlsForUser, validateShortUrl, validateUser } = require("./helperfuncs")
+const {addNewUser, generateRandomString, getUserByEmail, urlsForUser, validateShortUrl, validateUser } = require("./helpers")
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -37,7 +37,7 @@ const users = {
   },
  "user2RandomID": {
     id: "user2RandomID", 
-    email: "Busty@blackcat.com", 
+    email: "Buster@blackcat.com", 
     password: "$2a$10$V55qSK3G8b1P8VunKCTomeYDMTv7igPO86SfmXzxrFnlwwaTar0Cu",
 
   }
@@ -64,12 +64,14 @@ app.get("/hello", (req, res) => {
 // Main URL
 app.get("/urls", (req, res) => {
 	const userID = req.session.user_id;
-	const loggedinUser = users[userID];
+	const loggedinUser = userID;
+	const user4template = users[userID];
+
 	if(!loggedinUser) {
 		return res.status(401).json(" You must but logged in to view this site ") 
 		}
 	const	urls = urlsForUser(urlDatabase, userID); 
-	const templateVars = { urls: urls , user: loggedinUser};
+	const templateVars = { urls: urls , user: user4template };
 	res.render("urls_index", templateVars);
 });
 
@@ -88,7 +90,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/register", (req, res) => {
 	// here we check the cookies if you are logged in you are sent to URLS
 	const userID = req.session.user_id;
-	const loggedinUser = users[userID];
+	const loggedinUser = userID;
 	if (loggedinUser) {
 	res.redirect("/urls");
 	} else {
@@ -106,7 +108,7 @@ app.post("/register",(req, res) => {
 		return res.status(400).send("please fill out a valid email and password");
 	}
 
-  const user = findUserByEmail(email);
+  const user = getUserByEmail(email);
   if (!user) {
 		const usersBd = users; 
 		const hashedPass = bcrypt.hashSync(password, 10);
@@ -172,17 +174,17 @@ app.post("/login", (req, res) => {
   if( email === "" || password === "") {
 		return res.status(400).send("please fill out a valid email and password");
 	}
-	const user = validateUser(dB, email, password);
+	const result = validateUser(dB, email, password);
 
-  if (user) {
-	//if the user passes validation we set the session
-	const userID = user.user.id
+	if (result.error) {
+		res.send( result.error)
+	}
+	const userID = result.user.id;
+
 	  req.session.user_id = userID;
-    res.redirect("/urls")
-		return
-  }
-    res.status(403).send("Wrong Credentials, Please try Again")	
+    return res.redirect("/urls")
 
+   
 });
 
 //this logs out the User

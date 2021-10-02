@@ -1,12 +1,11 @@
 
 const bcrypt = require("bcryptjs");
 const generateRandomString = function() {
-	let ID = "";
-	let possible = "AaBbCcDdEeFfGgHhIiJjKkLMmNnPpQqRrSsTtUuVvWwXxYyZz123456789";
+  let ID = "";
+  let possible = "AaBbCcDdEeFfGgHhIiJjKkLMmNnPpQqRrSsTtUuVvWwXxYyZz123456789";
 
-	for (let i = 0; i < 6; i++)
-		ID += possible.charAt(Math.floor(Math.random() * possible.length));
-
+  for (let i = 0; i < 6; i++)
+    ID += possible.charAt(Math.floor(Math.random() * possible.length));
 	return ID;
 }
 
@@ -33,7 +32,7 @@ const validateShortUrl = (shortURL , urlDatabase) => {
 }
 
 // helper function to get the ID by cross referencing the email 
-const findUserByEmail = (email, users) => {
+const getUserByEmail = (email, users) => {
 	for (let id in users) {
 		if (users[id].email === email) {
 			return users[id];
@@ -41,7 +40,6 @@ const findUserByEmail = (email, users) => {
 	}
 	return false;
 }
-
 
 // this function creates a object with all the URL belonging to the u
 const urlsForUser = (urlDatabase, id) => {
@@ -58,28 +56,28 @@ const urlsForUser = (urlDatabase, id) => {
 }
 
 const validateUser = (dB, email, password) => {
-	const user = findUserByEmail(email, dB) 
+	const user = getUserByEmail(email, dB) 
 	
 	if (user) {
 		
 		if (bcrypt.compareSync(password, user.password)) {
 			// Email & password match
+			console.log("match");
 			return { user: user, error: null };
 		}
 		// Bad password
-		return { user: null, error: "bad password" };
+    return { user: null, error: "bad password" };
 	}
 	// Bad email
-	return { user: null, error: "bad email" };
-
+  return { user: null, error: "bad email" };
 };
 
 
 
-
-module.exports = { 
-	addNewUser,
-	generateRandomString,
-	urlsForUser,
+module.exports = {
+  addNewUser,
+  getUserByEmail,
+  generateRandomString,
+  urlsForUser,
   validateShortUrl,
-  validateUser }
+  validateUser };
