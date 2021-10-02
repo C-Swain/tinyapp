@@ -3,11 +3,14 @@
 TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs . Each User can keep their links safely in there account and share their shortened links with friends. perfect adding to emails. texts or business cards to make your links easier to type ! Save space and save time! 
 
 ## Final Product
-Here is a log in screen showing our simple log in process!
-![Registration Page](https://github.com/C-Swain/tinyapp/blob/master/screenshots/register.png)
 
-One you are logged in you will be able to view any links in your library!
+![Registration Page](https://github.com/C-Swain/tinyapp/blob/master/screenshots/register.png)
+Here is a log in screen showing our simple log in process!
+
+
+
 ![User URL Page](https://github.com/C-Swain/tinyapp/blob/master/screenshots/urlsPageLoggedIn.png)
+One you are logged in you will be able to view any links in your library!
 
 ## Dependencies
 In order for Tinyapp correctly please make sure you have all the dependencies installed.
