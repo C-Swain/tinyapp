@@ -142,8 +142,19 @@ app.get("/urls/:shortURL", (req, res) => {
     const userID = req.session.user_id;
     const loggedinUser = users[userID];
     const templateVars = { shortURL: shortURL, longURL: longURL, user: loggedinUser };
+      if (!loggedinUser) {
+      res.send("You must log in in order to view your Short URLS")
+    }
+    if(userID !== urlDatabase[shortURL].userID) {
+    
+    res.send("You do not own a Short URL with this code ")
+    
+    }
+    
     return res.render("urls_show", templateVars);
-  } else {
+  
+  } 
+ 
     res.status(400).send("The Short URL you have entered is not associated with any Tinyapp link");
   }
 
