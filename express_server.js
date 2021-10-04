@@ -142,7 +142,9 @@ app.get("/urls/:shortURL", (req, res) => {
     const userID = req.session.user_id;
     const loggedinUser = users[userID];
     const templateVars = { shortURL: shortURL, longURL: longURL, user: loggedinUser };
+
     if (!loggedinUser) {
+
       res.send("You must log in in order to view your Short URLS")
     }
     if(userID !== urlDatabase[shortURL].userID) {
@@ -154,7 +156,9 @@ app.get("/urls/:shortURL", (req, res) => {
     return res.render("urls_show", templateVars);
   
   } 
+
   res.status(400).send("The Short URL you have entered is not associated with any Tinyapp link");
+
 });
 
 
@@ -217,3 +221,4 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
